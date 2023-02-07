@@ -1,24 +1,20 @@
-#include <iostream>
-#include <stack>
-#include <string>
-#include <algorithm> 
-#include <vector>
+#include <bits/stdc++.h>
 
 using namespace std;
 
 class node{
 public:
-	char input;
-	int to;
-	node *next;
+	map<char,vector<node*>> input;
 };
+
+vector<node*> node_tracker;
 
 int prec(char c){
 	if(c=='*'){
 		return 3;
 	}else if(c=='.'){
 		return 2;
-	}else if(c=='+'){
+	}else if(c=='|'){
 		return 1;
 	}else{
 		return -1;
@@ -74,167 +70,100 @@ string post(string s)
 return ns;
 }
 
-void printnode(vector<node*> v){
+void printnode(vector<node*> node_tracker,vector<vector<node*>> st){
 	cout<<"___________________________________________"<<endl;
 	cout<<"| from state\t| input\t| tostates"<<endl;
-	for(int i=0;i<v.size();i++){
-		cout<<"| "<<i<<"          \t|";
-		node* head = v[i];
- 		cout<<head->input;
- 		bool first = true;
-		while(head!=NULL){
-			if (first)
-			{
-				cout<<"     \t|";
-				first = false;
-			}else{
-				cout<<"     \t";
-			}
-			cout<<head->to;
-			head = head->next;
-		}
-		cout<<endl;
+	
+	map<node*,int> mp;
+	for(int i=0;i<node_tracker.size();i++){
+	    mp[node_tracker[i]]=i;
 	}
-	cout<<"___________________________________________"<<endl;
+	int num =0;
+	
+	for(int i=0;i<node_tracker.size();i++){
+		
+		
+		for(auto transition:node_tracker[i]->input){
+		    cout<<"| "<<i<<"          \t|";
+		    cout<<transition.first<<" \t|";
+		    for(node* temp:transition.second){
+		        cout<<mp[temp]<<" ";
+		    }
+		    cout<<"\n";
+		}
+	}
+	cout<<"starting node is ";
+	cout<<mp[st[0][0]]<<endl;
+	cout<<"ending node is ";
+	cout<<mp[st[0][1]]<<endl;
 }
 
-node* makenode(char in){
+
+
+vector<node*> makenode(char in){
 	node* a = new node;
-	a->input = in;
-	a->to = -1;
-	a->next = NULL;
-	return a;
-}
-
-node* copynode(node* a){
 	node* b = new node;
-	b->input = -1;
-	b->to = -1;
-	b->next =NULL;
-	return b;
+	node_tracker.push_back(a);
+	node_tracker.push_back(b);
+
+	a->input[in].push_back(b);
+
+	return {a,b};
 }
 
-void andd(vector<node*> &v,vector<vector<int> > &st){
-	int x,y;
-	int first,last1;
-	y = st[st.size()-1][0];
-	x = st[st.size()-2][1];
+void andd(vector<vector<node*> > &st){
+
+	node* first = st[st.size()-2][1];
+	node* last = st[st.size()-1][0];
+	
+	first->input['e'].push_back(last);
+	
 	first = st[st.size()-2][0];
-	last1 = st[st.size()-1][1];
+	last = st[st.size()-1][1];
+	
+	st.pop_back();
+	st.pop_back();
+	
+	st.push_back({first,last});
+
+	
+}
+
+void orr(vector<vector<node*> > &st){
+	
+	node* start = new node;
+	node_tracker.push_back(start);
+	start->input['e'].push_back(st[st.size()-2][0]);
+	start->input['e'].push_back(st[st.size()-1][0]);
+	
+	node* end = new node;
+	node_tracker.push_back(end);
+	st[st.size()-1][1]->input['e'].push_back(end);
+	st[st.size()-2][1]->input['e'].push_back(end);
 
 	st.pop_back();
 	st.pop_back();
 
-	vector<int> ptemp;
-	
-	ptemp.push_back(first);
-	ptemp.push_back(last1);
-	st.push_back(ptemp);
-
-	node* last = v[y];
-	node * lnode= v[x];
-	node* temp = copynode(last);
-	
-	while(lnode->next!=NULL){
-		lnode = lnode->next;
-	}
-	lnode->next = temp;
-	lnode->to = y;
+    st.push_back({start,end});
 
 }
 
-void orr(vector<node*> &v,vector<vector<int> > &st){
-	int x,y,x1,y1;
-	x = st[st.size()-2][0];
-	y = st[st.size()-1][0];
-	x1 = st[st.size()-2][1];
-	y1 = st[st.size()-1][1];
-	node* start = makenode('e');
-	node* end = makenode('e');
-	v.push_back(start);
-	int firstnode = v.size() -1;
-	v.push_back(end);
-	int endnode = v.size() -1;
-
+void closure(vector<vector<node*> > &st){
+	
+	node* start = new node;
+	node* end = new node;
+	node_tracker.push_back(start);
+	node_tracker.push_back(end);
+	
+	start->input['e'].push_back(st[st.size()-1][0]);
+	start->input['e'].push_back(end);
+	
+	st[st.size()-1][1]->input['e'].push_back(st[st.size()-1][0]);
+	st[st.size()-1][1]->input['e'].push_back(end);
+	
 	st.pop_back();
-	st.pop_back();
-
-	vector<int> ptemp;
-	ptemp.push_back(firstnode);
-	ptemp.push_back(endnode);
-	st.push_back(ptemp);
-
-	for(int i=0;i<v.size()-2;i++){
-		node* h=v[i];
-		while(h->next!=NULL){
-			if(h->to==x || h->to == y){
-				h->to = firstnode;
-			}
-			h = h->next;
-		}
-	}
-
-	node* temp = copynode(v[x]);
-	node* temp1 = copynode(v[y]);
-	node* t = v[firstnode];
-	while(t->next!=NULL){
-		t = t->next;
-	}
-	t->to = x;
-	t->next  = temp;
-	t->next->to = y;
-	t->next->next = temp1;
-
-	node* adlink = v[x1];
-	while(adlink->next!=NULL){
-		adlink = adlink->next;
-	}
-
-	adlink->to= endnode;
-	adlink->next = copynode(end);
-
-	node* adlink1 = v[y1];
-	while(adlink1->next!=NULL){
-		adlink1 = adlink1->next;
-	}
-	adlink1->to = endnode;
-	adlink1->next = copynode(end);
-
-}
-
-void closure(vector<node*> &v, vector<vector<int> > &st){
-	int x,x1;
-	x = st[st.size()-1][0];
-	x1 = st[st.size()-1][1];
-	node* s = makenode('e');
-
-	v.push_back(s);
-	int firstnode = v.size() -1;
-
-	st.pop_back();
-	vector<int> ptemp;
-	ptemp.push_back(x);
-	ptemp.push_back(firstnode);
-	st.push_back(ptemp);
-
-	for(int i=0;i<v.size()-2;i++){
-		node* h=v[i];
-		while(h->next!=NULL){
-			if(h->to==x){
-				h->to = firstnode;
-			}
-			h = h->next;
-		}
-	}
-
-	node* t = v[x1];
-	while(t->next!=NULL){
-		t = t->next;
-	}
-	t->to = x;
-	t->next = copynode(t);
-	t->next->to = firstnode;
-	t->next->next = copynode(s);
+	st.push_back({start,end});
+	
 }
 
 int main(){
@@ -242,36 +171,28 @@ int main(){
 	cout<<"Enter a regular expression\n";
 	cin>>in;
 	string o;
-	vector<node*> v;
 	o = post(in);
 	cout<<"\npostfix expression is "<< o<<endl;
-	vector<vector<int>> st;
-	int firstnode = 0;
+	vector<vector<node*>> st;
+
 	for(int l =0 ;l<o.length();l++){
-		if(o[l] !='+' && o[l]!='*' && o[l]!='.'){
-			node* temp = makenode(o[l]);
-			v.push_back(temp);
-			vector<int> ptemp;
-			ptemp.push_back(v.size()-1);
-			ptemp.push_back(v.size()-1);
-			st.push_back(ptemp);
+		if(o[l] !='|' && o[l]!='*' && o[l]!='.'){
+			vector<node*> temp = makenode(o[l]);
+			st.push_back(temp);
 		}
 		else if(o[l]=='.'){
-			andd(v,st);
+			andd(st);
 		}
-		else if(o[l]=='+'){
-			orr(v,st);
+		else if(o[l]=='|'){
+			orr(st);
 		}
 		else if(o[l]=='*'){
-			closure(v,st);
+			closure(st);
 		}
 	}
 	cout<<"\ntrainsition table for given regular expression is - \n";
-	printnode(v);
+	printnode(node_tracker,st);
 	cout<<endl;
-	cout<<"starting node is ";
-	cout<<st[st.size()-1][0]<<endl;
-	cout<<"ending node is ";
-	cout<<st[st.size()-1][1]<<endl;
+	
 	return 0;
 }
