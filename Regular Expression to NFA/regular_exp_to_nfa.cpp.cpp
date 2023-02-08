@@ -10,7 +10,7 @@ public:
 vector<node*> node_tracker;
 
 int prec(char c){
-	if(c=='*'){
+	if(c=='*' || c=='+'){
 		return 3;
 	}else if(c=='.'){
 		return 2;
@@ -19,6 +19,30 @@ int prec(char c){
 	}else{
 		return -1;
 	}
+}
+
+string preprocess(string &s){
+    string ns = "";
+    for(int i=0;i<s.size();i++){
+        char c = s[i];
+        if(c=='+'){
+            string str = "";
+            if(s[i-1]==')'){
+                for(int j=i-1;s[j]!='(';j--){
+                    str = s[j]+str;
+                }
+                str = "("+str;
+            }
+            else{
+                str +=s[i-1];
+            }
+            s = s.substr(0,i)+"."+str+"*"+s.substr(i+1);
+            
+        }
+    }
+    cout<<"PreProcessed RE:"<<s<<"\n";
+    return s;
+    
 }
 
 string post(string s) 
@@ -171,12 +195,13 @@ int main(){
 	cout<<"Enter a regular expression\n";
 	cin>>in;
 	string o;
+	in = preprocess(in);
 	o = post(in);
 	cout<<"\npostfix expression is "<< o<<endl;
 	vector<vector<node*>> st;
 
 	for(int l =0 ;l<o.length();l++){
-		if(o[l] !='|' && o[l]!='*' && o[l]!='.'){
+		if(o[l] !='|' && o[l]!='*' && o[l]!='.' && o[l]!='+'){
 			vector<node*> temp = makenode(o[l]);
 			st.push_back(temp);
 		}
@@ -189,6 +214,13 @@ int main(){
 		else if(o[l]=='*'){
 			closure(st);
 		}
+		else if(o[l]=='+'){
+			vector<node*> temp = st[st.size()-1];
+			closure(st);
+			st.push_back(temp);
+			andd(st);
+		}
+		
 	}
 	cout<<"\ntrainsition table for given regular expression is - \n";
 	printnode(node_tracker,st);
