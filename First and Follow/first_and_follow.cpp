@@ -39,29 +39,37 @@ bool isNonTerminal(string s){
 
 set<string> findFirst(string s){
     
-    for(auto i:mp){
-        vec.push_back(i.first);
-    }
-    
     set<string> res;
     if(s=="eps") return {"eps"};
     else if(!isNonTerminal(s)) return {s};
     else{
+        set<string> res1;
         for(string str:mp[s]){
             int pos = str.find('.');
             string temp = str.substr(0,pos);
-            str = str.substr(pos+1);
+            if(pos==-1) str = "";
+            else str = str.substr(pos+1);
+            
+            // cout<<temp<<" "<<str;
+            // return {};
             while(isNonTerminal(temp)) {
                 set<string> first = findFirst(temp);
-                if(first.find("eps")!=first.end()) {
+                if(first.find("eps")!=first.end() && str.size()!=0) {
                     pos = str.find('.');
                     temp = str.substr(0,pos);
-                    str = str.substr(pos+1);
+                    if(pos==-1) str = "";
+                    else str = str.substr(pos+1);
                 }
                 else temp = "something";
-                res.insert(first.begin(),first.end());
+                res1.insert(first.begin(),first.end());
             }
-            if(temp!="something") res.insert(temp);
+            
+            if(temp=="eps") res1.insert("eps");
+            else if(temp!="something" ){
+                res1.insert(temp);
+                res1.erase("eps");
+            }
+            res.insert(res1.begin(),res1.end());
         }
     }
     return res;
@@ -69,9 +77,13 @@ set<string> findFirst(string s){
 
 int main()
 {
-    mp["A"]={"d.f","B.C.e","f.g.t","f.e.t"};
-    mp["B"]={"g","eps"};
+    mp["A"]={"C.d"};
+    mp["B"]={"g","d","eps"};
     mp["C"]={"j","eps"};
+    
+    for(auto i:mp){
+        vec.push_back(i.first);
+    }
 
     set<string> res = findFirst("A");
     for(string s:res){
