@@ -37,7 +37,11 @@ bool isNonTerminal(string s){
     return false;
 }
 
+map<string,set<string>> first;
+
 set<string> findFirst(string s){
+    
+    if(first.find(s)!=first.end()) return first[s];
     
     set<string> res;
     if(s=="eps") return {"eps"};
@@ -72,20 +76,81 @@ set<string> findFirst(string s){
             res.insert(res1.begin(),res1.end());
         }
     }
+    first[s]=res;
     return res;
+}
+
+vector<string> tokenize(string str){
+    string s = "";
+    vector<string> res;
+    for(char c:str){
+        if(c=='.'){
+            res.push_back(s);
+            s = "";
+        }
+        else s+=c;
+    }
+    res.push_back(s);
+    return res;
+}
+map<string,set<string>> follow;
+
+set<string> find_follow(string s){
+    
+    if(follow.find(s)!=follow.end()) return follow[s];
+    
+    for(auto m:mp){
+        string st = m.first;
+        for(string str:mp[st]){
+            
+            vector<string> term_NT = tokenize(str);
+            int i=0;
+            for(i=0;i<term_NT.size();i++){
+                if(term_NT[i]==s)
+                    break;
+            }
+            for(int j=i;j<term_NT.size();j++){
+                bool has_epsilon = false;
+                if(j==term_NT.size()-1){
+                    set<string> follow_first = find_follow(st);
+                    follow[s].insert(follow_first.begin(),follow_first.end());
+                }
+                else{
+                    if(isNonTerminal(term_NT[j+1])){
+                        set<string> first_next = findFirst(term_NT[j+1]);
+
+                        if(first_next.find("eps")!=first_next.end()){
+                            has_epsilon=true;
+                            first_next.erase("eps");
+                        }
+                        follow[term_NT[i]].insert(first_next.begin(),first_next.end());
+                    }
+                    else{
+                        follow[term_NT[i]].insert(term_NT[j+1]);
+                    }
+                }
+                if(!has_epsilon) break;
+            }
+        }
+    }
+    return follow[s];
 }
 
 int main()
 {
-    mp["A"]={"C.d"};
-    mp["B"]={"g","d","eps"};
-    mp["C"]={"j","eps"};
+    mp["S"]={"B.A"};
+    mp["A"]={"g","d","eps"};
+    mp["B"]={"j"};
     
     for(auto i:mp){
         vec.push_back(i.first);
     }
 
+    follow["S"] = {"$"};
+    
+    // set<string> res = find_follow("B");
     set<string> res = findFirst("A");
+
     for(string s:res){
         cout<<s<<"\n";
     }
