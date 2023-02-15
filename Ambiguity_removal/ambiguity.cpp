@@ -153,9 +153,24 @@ bool fact_helper(string s){
             hasPrefix=true;
             string prefix = longestCommonPrefix(str);
             string newNode = makeNode();
-            mp[s].push_back(prefix+newNode);
+            
+            bool nodot = false;
+           
+            if(prefix[prefix.size()-1]!='.'){
+                mp[s].push_back(prefix+"."+newNode);
+                nodot = true;
+            }
+            else mp[s].push_back(prefix+newNode);
             for(string s1:str){
-                mp[newNode].push_back(s1.substr(prefix.size()));
+                if(s1==prefix){
+                    mp[newNode].push_back("eps");
+//                     nodot = true;
+                }
+                else{
+                    if(nodot)
+                        mp[newNode].push_back(s1.substr(prefix.size()+1));
+                    else mp[newNode].push_back(s1.substr(prefix.size()));
+                 }
             }
             for(string str1:mp["A1"]) cout<<str1<<" ";
         }
@@ -178,7 +193,7 @@ void leftfactoring(){
 
 int main()
 {
-    mp["A"]={"d.f","f.g.e","f.g.t","f.e.t"};
+    mp["A"]={"c.f","c.f.g.t","f.g.t","f.e.t"};
     // mp["B"]={"C.b"};
     // mp["C"]={"A","B","f"};
     print();
