@@ -97,7 +97,7 @@ map<string,set<string>> follow;
 
 set<string> find_follow(string s){
     
-    if(follow.find(s)!=follow.end()) return follow[s];
+    if(follow.find(s)!=follow.end() && s!="S") return follow[s];
     
     for(auto m:mp){
         string st = m.first;
@@ -139,7 +139,7 @@ set<string> find_follow(string s){
 int main()
 {
     mp["S"]={"B.A"};
-    mp["A"]={"g","d","eps"};
+    mp["A"]={"g","d","f.S.A"};
     mp["B"]={"j"};
     
     for(auto i:mp){
@@ -148,7 +148,7 @@ int main()
 
     follow["S"] = {"$"};
     
-    // set<string> res = find_follow("B");
+    // set<string> res = find_follow("S");
     set<string> res = findFirst("A");
 
     for(string s:res){
